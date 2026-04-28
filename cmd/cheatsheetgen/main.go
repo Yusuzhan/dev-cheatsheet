@@ -182,7 +182,11 @@ func groupByBaseName(files []mdFile) []fileGroup {
 	for _, k := range order {
 		g := *m[k]
 		sort.Slice(g.files, func(i, j int) bool {
-			return g.files[i].localePart() == ""
+			si := g.files[i].localePart()
+			sj := g.files[j].localePart()
+			iIsLocale := si != "" && isLocaleSuffix(si)
+			jIsLocale := sj != "" && isLocaleSuffix(sj)
+			return !iIsLocale && jIsLocale
 		})
 		result = append(result, g)
 	}
