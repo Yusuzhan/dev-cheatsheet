@@ -2,6 +2,8 @@
 
 Convert Markdown files into beautiful single-page HTML cheatsheets, auto-deployed to GitHub Pages.
 
+**Live Site: [https://yusuzhan.github.io/dev-cheatsheet/](https://yusuzhan.github.io/dev-cheatsheet/)**
+
 ## Adding a Cheatsheet
 
 Drop a `.md` file into `cheatsheets/` and push. Each file needs a YAML frontmatter:
