@@ -150,6 +150,38 @@ git reflog show HEAD@{5}
 git checkout HEAD@{5}
 ```
 
+## fa-scroll Conventional Commits
+
+```bash
+# format: <type>(<scope>): <description>
+git commit -m "feat: add user login page"
+git commit -m "fix: correct password validation"
+git commit -m "docs: update API documentation"
+git commit -m "refactor: extract auth middleware"
+git commit -m "test: add unit tests for user service"
+git commit -m "chore: upgrade dependencies"
+git commit -m "feat(auth): support OAuth2 login"
+git commit -m "fix(api): handle null response"
+```
+
+Commit types:
+- `feat` new feature
+- `fix` bug fix
+- `docs` documentation
+- `style` formatting (no code change)
+- `refactor` code restructuring
+- `test` adding tests
+- `chore` build/tooling changes
+
+```
+feat: add login page
+
+Implement OAuth2 login with GitHub provider.
+Includes redirect callback and session handling.
+
+Closes #123
+```
+
 ## fa-lightbulb Useful Tips
 
 ```bash

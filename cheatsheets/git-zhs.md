@@ -151,6 +151,38 @@ git reflog show HEAD@{5}
 git checkout HEAD@{5}          # 恢复到历史状态
 ```
 
+## fa-scroll Conventional Commits
+
+```bash
+# 格式: <类型>(<范围>): <描述>
+git commit -m "feat: 添加用户登录页"
+git commit -m "fix: 修正密码校验逻辑"
+git commit -m "docs: 更新 API 文档"
+git commit -m "refactor: 提取认证中间件"
+git commit -m "test: 添加用户服务单元测试"
+git commit -m "chore: 升级依赖版本"
+git commit -m "feat(auth): 支持 OAuth2 登录"
+git commit -m "fix(api): 处理空值响应"
+```
+
+提交类型：
+- `feat` 新功能
+- `fix` 修复缺陷
+- `docs` 文档变更
+- `style` 格式调整（不影响逻辑）
+- `refactor` 重构（不新增功能也不修复）
+- `test` 测试相关
+- `chore` 构建/工具变更
+
+```
+feat: 添加登录页
+
+实现基于 GitHub 的 OAuth2 登录。
+包含回调处理和会话管理。
+
+Closes #123
+```
+
 ## fa-lightbulb 实用技巧
 
 ```bash
