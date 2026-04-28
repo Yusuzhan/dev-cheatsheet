@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/Yusuzhan/dev-cheatsheet/internal/model"
@@ -179,7 +180,11 @@ func groupByBaseName(files []mdFile) []fileGroup {
 	}
 	var result []fileGroup
 	for _, k := range order {
-		result = append(result, *m[k])
+		g := *m[k]
+		sort.Slice(g.files, func(i, j int) bool {
+			return g.files[i].localePart() == ""
+		})
+		result = append(result, g)
 	}
 	return result
 }
