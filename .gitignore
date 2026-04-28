@@ -1,0 +1,9 @@
+# Binary
+cheatsheetgen
+
+# Generated output
+site/
+
+# OS
+.DS_Store
+Thumbs.db
