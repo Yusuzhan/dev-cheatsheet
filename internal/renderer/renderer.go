@@ -3,6 +3,7 @@ package renderer
 import (
 	"bytes"
 	"embed"
+	"fmt"
 	"html/template"
 	"strconv"
 	"strings"
@@ -10,7 +11,7 @@ import (
 	"github.com/Yusuzhan/dev-cheatsheet/internal/model"
 )
 
-//go:embed template.html
+//go:embed template.html group-template.html
 var templateFS embed.FS
 
 var funcMap = template.FuncMap{
@@ -24,6 +25,45 @@ type templateData struct {
 	PrimaryDeeper string
 	PrimaryLight  string
 	PrimaryGlow   string
+}
+
+type groupTemplateData struct {
+	Title         string
+	Icon          string
+	Primary       string
+	PrimaryDark   string
+	PrimaryDeeper string
+	PrimaryLight  string
+	PrimaryGlow   string
+	Lang          string
+	DefaultLocale string
+	Variants      []localeVariant
+}
+
+type localeVariant struct {
+	Locale   string
+	Label    string
+	Cheatsheet model.Cheatsheet
+}
+
+var localeLabels = map[string]string{
+	"en":   "EN",
+	"zhs":  "简中",
+	"zht":  "繁中",
+	"ja":   "日本語",
+	"ko":   "한국어",
+	"de":   "DE",
+	"fr":   "FR",
+	"es":   "ES",
+	"pt":   "PT",
+	"ru":   "RU",
+}
+
+func LocaleLabel(locale string) string {
+	if label, ok := localeLabels[locale]; ok {
+		return label
+	}
+	return strings.ToUpper(locale)
 }
 
 func Render(cs *model.Cheatsheet) (string, error) {
@@ -42,6 +82,55 @@ func Render(cs *model.Cheatsheet) (string, error) {
 
 	var buf bytes.Buffer
 	if err := tmpl.Execute(&buf, data); err != nil {
+		return "", err
+	}
+	return buf.String(), nil
+}
+
+func RenderGroup(variants []*model.Cheatsheet) (string, error) {
+	if len(variants) == 0 {
+		return "", fmt.Errorf("no variants provided")
+	}
+	if len(variants) == 1 {
+		return Render(variants[0])
+	}
+
+	tmpl, err := template.New("group-template.html").Funcs(funcMap).ParseFS(templateFS, "group-template.html")
+	if err != nil {
+		return "", err
+	}
+
+	def := variants[0]
+	gdata := groupTemplateData{
+		Title:         def.Title,
+		Icon:          def.Icon,
+		Primary:       def.Primary,
+		PrimaryDark:   darken(def.Primary, 30),
+		PrimaryDeeper: darken(def.Primary, 60),
+		PrimaryLight:  lighten(def.Primary, 0.85),
+		PrimaryGlow:   def.Primary + "1F",
+		Lang:          def.Lang,
+		DefaultLocale: def.Locale,
+	}
+
+	if gdata.DefaultLocale == "" {
+		gdata.DefaultLocale = "en"
+	}
+
+	for _, cs := range variants {
+		loc := cs.Locale
+		if loc == "" {
+			loc = "en"
+		}
+		gdata.Variants = append(gdata.Variants, localeVariant{
+			Locale:     loc,
+			Label:      LocaleLabel(loc),
+			Cheatsheet: *cs,
+		})
+	}
+
+	var buf bytes.Buffer
+	if err := tmpl.Execute(&buf, gdata); err != nil {
 		return "", err
 	}
 	return buf.String(), nil

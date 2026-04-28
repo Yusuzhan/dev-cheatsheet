@@ -7,6 +7,7 @@ type Cheatsheet struct {
 	Icon     string
 	Primary  string
 	Lang     string
+	Locale   string
 	Sections []Section
 }
 

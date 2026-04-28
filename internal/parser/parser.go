@@ -22,6 +22,7 @@ type Frontmatter struct {
 	Icon    string `yaml:"icon"`
 	Primary string `yaml:"primary"`
 	Lang    string `yaml:"lang"`
+	Locale  string `yaml:"locale"`
 }
 
 func Parse(md []byte, lang string, primary string) (*model.Cheatsheet, error) {
@@ -90,6 +91,7 @@ func Parse(md []byte, lang string, primary string) (*model.Cheatsheet, error) {
 		Icon:     icon,
 		Primary:  primary,
 		Lang:     lang,
+		Locale:   fm.Locale,
 		Sections: sections,
 	}, nil
 }

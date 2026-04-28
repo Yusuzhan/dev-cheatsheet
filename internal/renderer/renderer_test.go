@@ -76,3 +76,74 @@ func TestRender_MultipleSections(t *testing.T) {
 		t.Error("HTML missing section titles")
 	}
 }
+
+func TestRenderGroup_MultiLocale(t *testing.T) {
+	en := &model.Cheatsheet{
+		Title:   "SQL",
+		Icon:    "fa-database",
+		Primary: "#FF6B35",
+		Lang:    "sql",
+		Locale:  "en",
+		Sections: []model.Section{
+			{ID: "queries", Icon: "fa-table", Title: "Queries", Content: template.HTML("<p>EN content</p>")},
+		},
+	}
+	zhs := &model.Cheatsheet{
+		Title:   "SQL",
+		Icon:    "fa-database",
+		Primary: "#FF6B35",
+		Lang:    "sql",
+		Locale:  "zhs",
+		Sections: []model.Section{
+			{ID: "查询", Icon: "fa-table", Title: "查询", Content: template.HTML("<p>中文内容</p>")},
+		},
+	}
+
+	html, err := RenderGroup([]*model.Cheatsheet{en, zhs})
+	if err != nil {
+		t.Fatalf("RenderGroup failed: %v", err)
+	}
+
+	if !strings.Contains(html, "locale-toggle") {
+		t.Error("HTML missing locale toggle")
+	}
+	if !strings.Contains(html, `data-locale="en"`) {
+		t.Error("HTML missing EN locale")
+	}
+	if !strings.Contains(html, `data-locale="zhs"`) {
+		t.Error("HTML missing ZHS locale")
+	}
+	if !strings.Contains(html, "EN content") {
+		t.Error("HTML missing EN content")
+	}
+	if !strings.Contains(html, "中文内容") {
+		t.Error("HTML missing ZHS content")
+	}
+	if strings.Count(html, `class="card"`) != 2 {
+		t.Errorf("Expected 2 cards, got %d", strings.Count(html, `class="card"`))
+	}
+}
+
+func TestRenderGroup_SingleVariantFallsBackToRender(t *testing.T) {
+	cs := &model.Cheatsheet{
+		Title:   "SQL",
+		Icon:    "fa-database",
+		Primary: "#FF6B35",
+		Lang:    "sql",
+		Sections: []model.Section{
+			{ID: "q", Icon: "fa-table", Title: "Q", Content: template.HTML("<p>test</p>")},
+		},
+	}
+
+	html, err := RenderGroup([]*model.Cheatsheet{cs})
+	if err != nil {
+		t.Fatalf("RenderGroup failed: %v", err)
+	}
+
+	if strings.Contains(html, "locale-toggle") {
+		t.Error("Single variant should not have locale toggle")
+	}
+	if !strings.Contains(html, "SQL Cheatsheet") {
+		t.Error("HTML missing title")
+	}
+}

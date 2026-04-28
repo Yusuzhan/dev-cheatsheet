@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/Yusuzhan/dev-cheatsheet/internal/model"
 	"github.com/Yusuzhan/dev-cheatsheet/internal/parser"
 	"github.com/Yusuzhan/dev-cheatsheet/internal/renderer"
 )
@@ -16,7 +17,7 @@ func main() {
 	primary := flag.String("primary", "#00ADD8", "Primary theme color (hex)")
 	lang := flag.String("lang", "", "Code language for syntax highlighting (auto-detected if empty)")
 	all := flag.Bool("all", false, "Generate all cheatsheets from directory")
-	cheatsheetsDir := flag.String("cheatsheets-dir", "cheatsheets", "Directory containing cheatsheet subdirectories (used with --all)")
+	cheatsheetsDir := flag.String("cheatsheets-dir", "cheatsheets", "Directory containing cheatsheet md files (used with --all)")
 	flag.Parse()
 
 	if *all {
@@ -69,75 +70,135 @@ func generateSingle(inputPath, outputPath, langOverride, primaryOverride string)
 	return nil
 }
 
-type mdEntry struct {
-	slug string
-	path string
-	lang string
-}
-
 func generateAll(cheatsheetsDir, outputDir string) error {
 	entries, err := os.ReadDir(cheatsheetsDir)
 	if err != nil {
 		return fmt.Errorf("reading cheatsheets dir: %w", err)
 	}
 
-	var mdEntries []mdEntry
+	var files []mdFile
 	for _, entry := range entries {
 		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".md") {
 			continue
 		}
 		name := strings.TrimSuffix(entry.Name(), ".md")
-		mdEntries = append(mdEntries, mdEntry{
+		files = append(files, mdFile{
 			slug: name,
 			path: filepath.Join(cheatsheetsDir, entry.Name()),
-			lang: "",
 		})
 	}
 
+	groups := groupByBaseName(files)
+
 	var landingEntries []landingEntry
-	for _, e := range mdEntries {
-		md, err := os.ReadFile(e.path)
-		if err != nil {
-			return fmt.Errorf("reading %s: %w", e.path, err)
+	for _, group := range groups {
+		var variants []*model.Cheatsheet
+		for _, f := range group.files {
+			md, err := os.ReadFile(f.path)
+			if err != nil {
+				return fmt.Errorf("reading %s: %w", f.path, err)
+			}
+			cs, err := parser.Parse(md, "", "#00ADD8")
+			if err != nil {
+				return fmt.Errorf("parsing %s: %w", f.path, err)
+			}
+			if cs.Locale == "" {
+				if isLocaleSuffix(f.localePart()) {
+					cs.Locale = f.localePart()
+				} else {
+					cs.Locale = "en"
+				}
+			}
+			variants = append(variants, cs)
 		}
 
-		cs, err := parser.Parse(md, e.lang, "#00ADD8")
+		html, err := renderer.RenderGroup(variants)
 		if err != nil {
-			return fmt.Errorf("parsing %s: %w", e.path, err)
+			return fmt.Errorf("rendering %s: %w", group.baseName, err)
 		}
 
-		html, err := renderer.Render(cs)
-		if err != nil {
-			return fmt.Errorf("rendering %s: %w", e.path, err)
-		}
-
-		outPath := filepath.Join(outputDir, e.slug, "index.html")
+		outPath := filepath.Join(outputDir, group.baseName, "index.html")
 		if err := os.MkdirAll(filepath.Dir(outPath), 0755); err != nil {
 			return err
 		}
 		if err := os.WriteFile(outPath, []byte(html), 0644); err != nil {
 			return fmt.Errorf("writing %s: %w", outPath, err)
 		}
-		fmt.Printf("Generated %s (%d sections)\n", outPath, len(cs.Sections))
+		fmt.Printf("Generated %s (%d sections, %d locales)\n", outPath, len(variants[0].Sections), len(variants))
 
+		def := variants[0]
+		var labels []string
+		for _, v := range variants {
+			labels = append(labels, renderer.LocaleLabel(v.Locale))
+		}
 		landingEntries = append(landingEntries, landingEntry{
-			Slug:    e.slug,
-			Title:   cs.Title,
-			Icon:    cs.Icon,
-			Primary: cs.Primary,
-			Lang:    cs.Lang,
+			Slug:         group.baseName,
+			Title:        def.Title,
+			Icon:         def.Icon,
+			Primary:      def.Primary,
+			Lang:         def.Lang,
+			LocaleLabels: labels,
 		})
 	}
 
 	return generateLanding(outputDir, landingEntries)
 }
 
+type mdFile struct {
+	slug string
+	path string
+}
+
+func (f mdFile) localePart() string {
+	idx := strings.LastIndex(f.slug, "-")
+	if idx >= 0 {
+		return f.slug[idx+1:]
+	}
+	return ""
+}
+
+type fileGroup struct {
+	baseName string
+	files    []mdFile
+}
+
+func groupByBaseName(files []mdFile) []fileGroup {
+	m := map[string]*fileGroup{}
+	var order []string
+	for _, f := range files {
+		base := f.slug
+		suffix := f.localePart()
+		if suffix != "" && isLocaleSuffix(suffix) {
+			base = f.slug[:strings.LastIndex(f.slug, "-")]
+		}
+		if _, ok := m[base]; !ok {
+			m[base] = &fileGroup{baseName: base}
+			order = append(order, base)
+		}
+		m[base].files = append(m[base].files, f)
+	}
+	var result []fileGroup
+	for _, k := range order {
+		result = append(result, *m[k])
+	}
+	return result
+}
+
+func isLocaleSuffix(s string) bool {
+	switch s {
+	case "zhs", "zht", "en", "ja", "ko", "de", "fr", "es", "pt", "ru":
+		return true
+	}
+	return false
+}
+
 type landingEntry struct {
-	Slug    string
-	Title   string
-	Icon    string
-	Primary string
-	Lang    string
+	Slug         string
+	Title        string
+	Icon         string
+	Primary      string
+	Lang         string
+	LocaleLabels []string
 }
 
 func generateLanding(outputDir string, entries []landingEntry) error {
@@ -214,6 +275,12 @@ header p { margin-top: 8px; opacity: 0.85; font-size: 1.05rem; }
 }
 .card .title { font-size: 1.2rem; font-weight: 700; color: #005F73; }
 .card .lang { font-size: 0.8rem; color: #5A7089; margin-top: 6px; }
+.card .locales { margin-top: 8px; display: flex; gap: 6px; }
+.card .locales span {
+  font-size: 0.7rem; font-weight: 600;
+  padding: 2px 8px; border-radius: 4px;
+  background: #F0F7FB; color: #5A7089;
+}
 .card .bar {
   height: 3px;
   border-radius: 2px;
@@ -236,9 +303,17 @@ footer a { color: #00ADD8; text-decoration: none; font-weight: 500; }
   <div class="icon" style="background: %s1A; color: %s"><i class="fas %s"></i></div>
   <div class="title">%s</div>
   <div class="lang">%s</div>
-  <div class="bar"></div>
-</a>
 `, e.Slug, e.Primary, e.Primary, e.Primary, e.Icon, e.Title, e.Lang))
+		if len(e.LocaleLabels) > 1 {
+			sb.WriteString(`  <div class="locales">`)
+			for _, l := range e.LocaleLabels {
+				sb.WriteString(fmt.Sprintf(`<span>%s</span>`, l))
+			}
+			sb.WriteString("</div>\n")
+		}
+		sb.WriteString(`  <div class="bar"></div>
+</a>
+`)
 	}
 	sb.WriteString(`</div>
 <footer>Powered by <a href="https://github.com/Yusuzhan/dev-cheatsheet">cheatsheetgen</a></footer>
