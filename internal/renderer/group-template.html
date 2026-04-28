@@ -344,16 +344,28 @@ footer a {
 (function() {
   var buttons = document.querySelectorAll('.locale-toggle button');
   var contents = document.querySelectorAll('.locale-content');
+  var defaultLocale = '{{.DefaultLocale}}';
+
+  function switchLocale(loc) {
+    buttons.forEach(function(b) { b.classList.toggle('active', b.dataset.locale === loc); });
+    contents.forEach(function(c) { c.classList.toggle('active', c.dataset.locale === loc); });
+    if (loc !== defaultLocale) {
+      history.replaceState(null, '', '#' + loc);
+    } else {
+      history.replaceState(null, '', window.location.pathname);
+    }
+  }
+
   buttons.forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      var loc = btn.dataset.locale;
-      buttons.forEach(function(b) { b.classList.remove('active'); });
-      btn.classList.add('active');
-      contents.forEach(function(c) {
-        c.classList.toggle('active', c.dataset.locale === loc);
-      });
-    });
+    btn.addEventListener('click', function() { switchLocale(btn.dataset.locale); });
   });
+
+  var hash = window.location.hash.replace('#', '');
+  if (hash) {
+    var found = false;
+    contents.forEach(function(c) { if (c.dataset.locale === hash) found = true; });
+    if (found) switchLocale(hash);
+  }
 })();
 </script>
 </body>
