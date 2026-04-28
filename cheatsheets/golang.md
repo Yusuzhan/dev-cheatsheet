@@ -252,6 +252,71 @@ func Max[T Number](a, b T) T {
 }
 ```
 
+## fa-font String Formatting
+
+```go
+fmt.Sprintf("name: %s, age: %d", "Alice", 25)  // formatted string
+fmt.Printf("value: %v\n", data)                 // print formatted
+fmt.Fprintf(w, "status: %d", code)              // write to io.Writer
+
+// common verbs
+// %s   string
+// %d   decimal integer
+// %f   float (default 6 decimals), %.2f for 2 decimals
+// %v   default format (any value)
+// %+v  with struct field names
+// %#v  Go syntax representation
+// %T   type of value
+// %q   quoted string
+// %p   pointer address
+// %02d zero-padded integer, width 2
+// %x   hex encoding
+// %b   binary representation
+// %%   literal percent sign
+
+fmt.Sprintf("%+v", user)          // struct with field names
+fmt.Sprintf("%.2f", 3.14159)      // "3.14"
+fmt.Sprintf("%04d", 7)            // "0007"
+fmt.Sprintf("%x", 255)            // "ff"
+```
+
+## fa-clock Date & Time
+
+```go
+now := time.Now()
+now.Year()                         // 2025
+now.Month()                        // time.April
+now.Day()                          // 29
+now.Hour()                         // 14
+now.Weekday()                      // time.Tuesday
+
+// formatting (reference time: Mon Jan 2 15:04:05 MST 2006)
+now.Format("2006-01-02")
+now.Format("2006-01-02 15:04:05")
+now.Format("01/02/06")
+now.Format(time.RFC3339)           // "2025-04-29T14:30:00+08:00"
+now.Format(time.RFC1123)           // "Tue, 29 Apr 2025 14:30:00 UTC"
+
+// parsing
+t, _ := time.Parse("2006-01-02", "2025-04-29")
+t, _ := time.Parse(time.RFC3339, "2025-04-29T14:30:00Z")
+
+// duration
+time.Sleep(2 * time.Second)
+diff := time.Since(start)          // elapsed time.Duration
+diff.Minutes()                     // float64
+diff.Seconds()
+
+// add / subtract
+later := now.Add(24 * time.Hour)
+deadline := now.AddDate(0, 1, 0)   // add 1 month
+
+// compare
+now.Before(deadline)
+now.After(deadline)
+now.Equal(otherTime)
+```
+
 ## fa-toolbox Common Patterns
 
 ```go

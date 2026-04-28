@@ -253,6 +253,71 @@ func Max[T Number](a, b T) T {
 }
 ```
 
+## fa-font 字符串格式化
+
+```go
+fmt.Sprintf("name: %s, age: %d", "Alice", 25)  // 格式化字符串
+fmt.Printf("value: %v\n", data)                 // 格式化打印
+fmt.Fprintf(w, "status: %d", code)              // 写入 io.Writer
+
+// 常用动词
+// %s   字符串
+// %d   十进制整数
+// %f   浮点数（默认6位小数），%.2f 保留2位
+// %v   默认格式（任意值）
+// %+v  显示结构体字段名
+// %#v  Go 语法表示
+// %T   值的类型
+// %q   带引号的字符串
+// %p   指针地址
+// %02d 补零整数，宽度2
+// %x   十六进制
+// %b   二进制
+// %%   百分号字面量
+
+fmt.Sprintf("%+v", user)          // 带字段名的结构体
+fmt.Sprintf("%.2f", 3.14159)      // "3.14"
+fmt.Sprintf("%04d", 7)            // "0007"
+fmt.Sprintf("%x", 255)            // "ff"
+```
+
+## fa-clock 日期与时间
+
+```go
+now := time.Now()
+now.Year()                         // 2025
+now.Month()                        // time.April
+now.Day()                          // 29
+now.Hour()                         // 14
+now.Weekday()                      // time.Tuesday
+
+// 格式化（参考时间: Mon Jan 2 15:04:05 MST 2006）
+now.Format("2006-01-02")           // "2025-04-29"
+now.Format("2006-01-02 15:04:05")  // "2025-04-29 14:30:00"
+now.Format("01/02/06")             // "04/29/25"
+now.Format(time.RFC3339)           // "2025-04-29T14:30:00+08:00"
+now.Format(time.RFC1123)           // "Tue, 29 Apr 2025 14:30:00 UTC"
+
+// 解析
+t, _ := time.Parse("2006-01-02", "2025-04-29")
+t, _ := time.Parse(time.RFC3339, "2025-04-29T14:30:00Z")
+
+// 时间间隔
+time.Sleep(2 * time.Second)
+diff := time.Since(start)          // 经过的时间 time.Duration
+diff.Minutes()                     // float64 分钟
+diff.Seconds()                     // float64 秒
+
+// 加减时间
+later := now.Add(24 * time.Hour)
+deadline := now.AddDate(0, 1, 0)   // 加 1 个月
+
+// 比较
+now.Before(deadline)               // true/false
+now.After(deadline)
+now.Equal(otherTime)
+```
+
 ## fa-toolbox 常用模式
 
 ```go
