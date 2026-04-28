@@ -67,6 +67,36 @@ user := User{ID: 1, Name: "Alice", Email: "a@b.com"}
 user.SetName("Bob")
 ```
 
+## fa-location-dot Pointers
+
+```go
+x := 42
+p := &x            // p is a pointer to x (*int)
+fmt.Println(*p)    // dereference: prints 42
+*p = 100           // modify value through pointer
+fmt.Println(x)     // 100
+
+var ptr *int       // nil pointer
+if ptr != nil {
+    fmt.Println(*ptr)
+}
+
+// pointer vs value in functions
+func inc(n *int) {
+    *n++           // modify original variable
+}
+inc(&x)
+
+// new() allocates zero value and returns pointer
+sp := new(string)  // *string, points to ""
+fmt.Println(*sp)   // ""
+
+// pointer to struct
+user := &User{ID: 1, Name: "Alice"}
+user.Name = "Bob"  // no need to dereference for struct fields
+fmt.Println(user.Name)
+```
+
 ## fa-cubes Interfaces & Embedding
 
 ```go

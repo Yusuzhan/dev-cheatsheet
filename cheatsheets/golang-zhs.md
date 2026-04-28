@@ -68,6 +68,36 @@ user := User{ID: 1, Name: "Alice", Email: "a@b.com"}
 user.SetName("Bob")
 ```
 
+## fa-location-dot 指针
+
+```go
+x := 42
+p := &x            // p 是指向 x 的指针 (*int)
+fmt.Println(*p)    // 解引用：输出 42
+*p = 100           // 通过指针修改值
+fmt.Println(x)     // 100
+
+var ptr *int       // 空指针 (nil)
+if ptr != nil {
+    fmt.Println(*ptr)
+}
+
+// 函数中的值与指针
+func inc(n *int) {
+    *n++           // 修改原始变量
+}
+inc(&x)
+
+// new() 分配零值并返回指针
+sp := new(string)  // *string，指向 ""
+fmt.Println(*sp)   // ""
+
+// 结构体指针
+user := &User{ID: 1, Name: "Alice"}
+user.Name = "Bob"  // 结构体字段无需显式解引用
+fmt.Println(user.Name)
+```
+
 ## fa-cubes 接口与嵌入
 
 ```go
