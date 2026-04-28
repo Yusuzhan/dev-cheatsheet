@@ -1,5 +1,5 @@
 ---
-title: SQL 速查表
+title: SQL
 icon: fa-database
 primary: "#FF6B35"
 lang: sql
