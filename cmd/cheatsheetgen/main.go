@@ -253,14 +253,57 @@ header {
 header h1 { font-size: 2.5rem; font-weight: 800; letter-spacing: -1px; }
 header h1 i { margin-right: 12px; }
 header p { margin-top: 8px; opacity: 0.85; font-size: 1.05rem; }
+.search-wrap {
+  max-width: 1000px;
+  width: 100%;
+  padding: 0 20px;
+  margin-top: -18px;
+  margin-bottom: 24px;
+  position: relative;
+  z-index: 1;
+}
+.search-box {
+  width: 100%;
+  padding: 14px 16px 14px 44px;
+  border: 1px solid rgba(0,173,216,0.15);
+  border-radius: 12px;
+  font-size: 1rem;
+  font-family: inherit;
+  background: #fff;
+  box-shadow: 0 4px 16px rgba(0,95,115,0.06);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.search-box:focus {
+  border-color: #48CAE4;
+  box-shadow: 0 4px 20px rgba(0,173,216,0.12);
+}
+.search-box::placeholder { color: #94A7B8; }
+.search-icon {
+  position: absolute;
+  left: 36px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94A7B8;
+  font-size: 0.95rem;
+  pointer-events: none;
+}
+.no-results {
+  display: none;
+  text-align: center;
+  color: #5A7089;
+  font-size: 1rem;
+  padding: 40px 20px;
+}
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 20px;
   max-width: 1000px;
   width: 100%;
-  padding: 36px 20px 72px;
+  padding: 0 20px 72px;
 }
+.card.hidden { display: none; }
 .card {
   background: #fff;
   border-radius: 16px;
@@ -305,14 +348,18 @@ footer a { color: #00ADD8; text-decoration: none; font-weight: 500; }
   <h1><i class="fas fa-book-open"></i> Dev Cheatsheets</h1>
   <p>快速查阅各种开发技术的速查表</p>
 </header>
-<div class="grid">
+<div class="search-wrap">
+  <i class="fas fa-magnifying-glass search-icon"></i>
+  <input class="search-box" type="text" placeholder="搜索速查表..." id="searchInput" />
+</div>
+<div class="grid" id="cardGrid">
 `)
 	for _, e := range entries {
-		sb.WriteString(fmt.Sprintf(`<a class="card" href="%s/index.html" style="--primary: %s">
+		sb.WriteString(fmt.Sprintf(`<a class="card" href="%s/index.html" style="--primary: %s" data-title="%s">
   <div class="icon" style="background: %s1A; color: %s"><i class="fas %s"></i></div>
   <div class="title">%s</div>
   <div class="lang">%s</div>
-`, e.Slug, e.Primary, e.Primary, e.Primary, e.Icon, e.Title, e.Lang))
+`, e.Slug, e.Primary, strings.ToLower(e.Title), e.Primary, e.Primary, e.Icon, e.Title, e.Lang))
 		if len(e.LocaleLabels) > 1 {
 			sb.WriteString(`  <div class="locales">`)
 			for _, l := range e.LocaleLabels {
@@ -325,7 +372,21 @@ footer a { color: #00ADD8; text-decoration: none; font-weight: 500; }
 `)
 	}
 	sb.WriteString(`</div>
+<div class="no-results" id="noResults">未找到匹配的速查表</div>
 <footer>Powered by <a href="https://github.com/Yusuzhan/dev-cheatsheet">cheatsheetgen</a></footer>
+<script>
+document.getElementById('searchInput').addEventListener('input', function() {
+  var q = this.value.toLowerCase();
+  var cards = document.querySelectorAll('#cardGrid .card');
+  var visible = 0;
+  cards.forEach(function(c) {
+    var match = !q || c.getAttribute('data-title').indexOf(q) !== -1;
+    c.classList.toggle('hidden', !match);
+    if (match) visible++;
+  });
+  document.getElementById('noResults').style.display = visible === 0 ? 'block' : 'none';
+});
+</script>
 </body>
 </html>`)
 	return sb.String()
